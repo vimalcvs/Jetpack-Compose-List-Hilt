@@ -13,31 +13,27 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PostViewModel @Inject constructor(private val repository: Repository) : ViewModel() {
-    private val _posts = MutableStateFlow<List<ModelPost>>(emptyList())
-    val posts: StateFlow<List<ModelPost>> = _posts.asStateFlow()
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
-
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
+    val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     init {
         getPosts()
     }
 
-    private fun getPosts() {
+    fun getPosts() {
         viewModelScope.launch {
-            _isLoading.value = true
-            _errorMessage.value = null
             try {
-                _posts.value = repository.getPosts()
+                _uiState.value = UiState.Success(repository.getPosts())
             } catch (e: Exception) {
-                _errorMessage.value = e.message
-            } finally {
-                _isLoading.value = false
+                _uiState.value = UiState.Error("No network connection")
             }
         }
     }
 }
 
+sealed class UiState {
+    data object Loading : UiState()
+    data class Success(val posts: List<ModelPost>) : UiState()
+    data class Error(val message: String) : UiState()
+}

@@ -12,7 +12,7 @@ class Repository @Inject constructor(private val apiService: ApiService) {
         if (response.isSuccessful) {
             return response.body() ?: emptyList()
         } else {
-            throw Exception("Network error: ${response.message()}")
+            throw Exception(response.code().toString())
         }
     }
 }
